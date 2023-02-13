@@ -1,5 +1,7 @@
 const hre = require("hardhat");
+const {config } = require("hardhat");
 const { Contract, ethers, Wallet } = require('ethers');
+const {accounts,web3} = require('web3')
 const { signMessage } = require('../scripts/sign');
 const express = require("express");
 const app = express();
@@ -1490,36 +1492,40 @@ app.post("/getBalanceofStaker", async (req,res) =>{
     res.send(balanceOfStaker)
 });
 
-let wallet = Wallet.createRandom()
-let pubAddress = wallet.address;
-let privateKey = wallet.privateKey;
+
 
 
 
 app.get("/SignRewards", async (req,res) => {
     const fireEpoch = await RewardContract.CURRENT_EPOCH()
-    let netId = await RewardContract.getChainId();
-    // const wallet = Wallet.createRandom()
-    // let privateKey = wallet.privateKey;
-    privateKey = privateKey.slice(2,);
-    let stakeOneRewards = "2";
-    stakeOneSign = await signMessage(privateKey,netId.toNumber(),RewardPoolContractAddress,stakeOneRewards,0,fireEpoch.toNumber());
-    res.send(stakeOneSign)
-});
+    console.log(fireEpoch);
 
-
-app.get("/getRewards", async (req,res) =>{
-    const fireEpoch = await RewardContract.CURRENT_EPOCH()
     let netId = await RewardContract.getChainId();
-    let stakeOneRewards = "2";
-    privateKey = privateKey.slice(2,);
+    console.log(netId);
+    
     epochTime = 604800;
-    stakeOneSign = await signMessage(privateKey,netId.toNumber(),RewardPoolContractAddress,stakeOneRewards,0,fireEpoch.toNumber());
+    let stakeOneRewards = "2";
+    const wallets = config.networks.hardhat.accounts;
+    const index = 0; // first wallet, increment for next wallets
+    const wallet1 = ethers.Wallet.fromMnemonic(wallets.mnemonic, wallets.path + `/${index}`);
+    let privateKey = wallet1.privateKey;
+    privateKey = privateKey.slice(2,);
+    
+    console.log(privateKey);
+    console.log(netId)
+
+    accounts = await web3.eth.getAccounts();
+    stakeOneSign = await signMessage(privateKey,netId.toNumber(),_reward_contract.address,stakeOneRewards,0,fireEpoch.toNumber());
     await hre.ethers.provider.send('evm_increaseTime', [epochTime]);
     await hre.ethers.provider.send('evm_mine');
-    const Reward = await RewardContract.rewardOfStake(stakeOneRewards,0,stakeOneSign,{from:pubAddress})
+
+    const Reward = await RewardContract.rewardOfStake(stakeOneRewards,0,stakeOneSign,{from : accounts[0]})
+    console.log(accounts[0]);
+    console.log("Reward -> ",Reward);
+
     res.send(Reward)
 });
+
 
 app.get("/accumulatedrewards", async(req,res) => {
     balance = await RewardContract.ACCUMALATED_REWARDS(0);
