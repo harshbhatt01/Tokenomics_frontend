@@ -93,7 +93,7 @@ app.get("/approve",async(req,res)=> {
 })
 
 app.post("/CreateStake", async (req,res) =>{
-    let stake_amount = req.body.amount;
+    let stake_amount = req.body.amount  ;
     const signers = await ethers.getSigners();
     const index = req.body.index || 1;
     const duration = req.body.duration;
@@ -105,6 +105,7 @@ app.get("/getBalanceofStake", async (req,res) =>{
     const signers = await ethers.getSigners();
     const stakeId = req.body.index || 0;
     let balance = await StakingContract.getStakeAmount(stakeId);
+    balance = balance * 10 ** -18;
     balance = balance.toString();
     res.send({ status : 200 , message : `stake balance fetched successfully`, balance})
 });
@@ -124,7 +125,7 @@ app.get("/SignRewards", async (req,res) => {
     const stakeId = req.body.stakeId || 0;
     const currentEpoch = await RewardContract.CURRENT_EPOCH();
     const netId = await RewardContract.getChainId();
-    const stakeRewards = req.body.rewards || "500000000000000";
+    let stakeRewards = req.body.rewards || "5000000000000000000";
     epochTime = 604800;
     const wallets = config.networks.hardhat.accounts;
     const index1 = 0; // first wallet, increment for next wallets
@@ -136,6 +137,7 @@ app.get("/SignRewards", async (req,res) => {
     await ethers.provider.send('evm_mine');
 
     const tx = await RewardContract.connect(signers[index]).rewardOfStake(stakeRewards,stakeId,signature);
+
   
 
     res.send({
@@ -162,7 +164,7 @@ app.get("/accumulatedrewards", async(req,res) => {
 
 app.get("/removeStake",async(req,res) => {
   const stakeId = req.body.stakeId || 0 ;
-  const amount = req.body.amount || "5";
+  const amount = req.body.amount || "5000000000000000000";
   const signers = await ethers.getSigners();
   const index = req.body.index || 1;
   const tx = await StakingContract.connect(signers[index]).removeStake(stakeId,amount);
