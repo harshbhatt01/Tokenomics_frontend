@@ -2,6 +2,9 @@
   "devDependencies": {
     "hardhat": "^2.11.2"
   },
+  "scripts": {
+    "dev" : "npx hardhat run --network localhost scripts/index.js "
+  },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.1.1",
     "@nomiclabs/hardhat-truffle5": "^2.0.7",
