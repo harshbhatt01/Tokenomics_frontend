@@ -1,6 +1,6 @@
 const  { ethers , config } = require("hardhat");
 const { providerJson, deployContracts }  = require('./staking')
-const { rewardPoolABI , stakingABI , volaryABI} = require('./abi');
+const { rewardPoolABI , stakingABI , volaryABI , lpABI} = require('./abi');
 const { signMessage } = require('../scripts/sign');
 const express = require("express");
 const app = express();
@@ -16,15 +16,11 @@ app.get("/", (req, res) => {
 
 
 
-VolaryContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-StakingContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-RewardPoolContractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+let VolaryContractAddress,StakingContractAddress,RewardPoolContractAddress,lpContractAddress;
 
 
 const provider = providerJson.provider;
-const VolaryContract = new ethers.Contract(VolaryContractAddress, volaryABI, provider);
-const StakingContract = new ethers.Contract(StakingContractAddress, stakingABI, provider);
-const RewardContract = new ethers.Contract(RewardPoolContractAddress, rewardPoolABI, provider);
+let VolaryContract,StakingContract,RewardContract,lpContract 
 
 //console.log(VolaryContract);
 
@@ -35,7 +31,16 @@ const RewardContract = new ethers.Contract(RewardPoolContractAddress, rewardPool
 // main()
 app.get('/deploy',async(req,res)=>{
   try{
-    const tx = await deployContracts();
+    const addresses = await deployContracts();
+    VolaryContractAddress = addresses.VolaryContractAddress
+    StakingContractAddress = addresses.StakingContractAddress
+    RewardPoolContractAddress = addresses.RewardPoolContractAddress
+    lpContractAddress = addresses.lpContractAddress;
+    VolaryContract = new ethers.Contract(VolaryContractAddress, volaryABI, provider);
+    StakingContract = new ethers.Contract(StakingContractAddress, stakingABI, provider);
+    RewardContract = new ethers.Contract(RewardPoolContractAddress, rewardPoolABI, provider);
+    lpContract = new ethers.Contract(lpContractAddress, lpABI, provider);
+
     res.send({ status : 200 , message : "contracts deployed"})
   }
   catch(err){
@@ -48,7 +53,7 @@ app.get('/deploy',async(req,res)=>{
 app.get("/AddRewardPool", async (req, res) => {
     try{
     const signers = await ethers.getSigners();
-    const tx = await StakingContract.connect(signers[0]).addRewardPoolAddress(RewardPoolContractAddress);
+    const tx = await StakingContract.connect(signers[0]).addRewardPoolAddress(RewardPoolContractAddress,{ gasLimit : 2100000});
     //console.log("tx is ",tx)
     //const approvefunc = await VolaryContract.approve(StakingContractAddress, 1000000)
     //await RewardContract.startPool()
@@ -63,10 +68,19 @@ app.get("/AddRewardPool", async (req, res) => {
 app.get("/volaryFaucet",async(req,res)=>{
   try{
   const index = req.body.index || 1;
+  const isLp = req.body.isLp  || false;
   const signers = await ethers.getSigners();
-  const tx = await VolaryContract.connect(signers[0]).transfer(signers[index].address,"100000000000000000000");
-  console.log(signers[1].address);
-  let balance = await VolaryContract.connect(signers[index]).balanceOf(signers[index].address);
+  let tx,balance
+  if(isLp){
+    tx = await lpContract.connect(signers[0]).getLpTokens(signers[index].address,"100000000000000000000");
+    balance = await lpContract.connect(signers[index]).balanceOf(signers[index].address);
+  } 
+  else{
+    tx = await VolaryContract.connect(signers[0]).transfer(signers[index].address,"100000000000000000000");
+    balance = await VolaryContract.connect(signers[index]).balanceOf(signers[index].address);
+  }  
+  //console.log(signers[1].address);
+  
   balance = balance * 10 ** -18;
   balance = balance.toString();
   res.send({ status : 200 , message : "faucet transfer successfull", hash : tx.hash , balance })
@@ -81,8 +95,12 @@ app.get("/approve",async(req,res)=> {
   try{
     const signers = await ethers.getSigners();
     const index = req.body.index || 1;
+    const isLp = req.body.isLp  || false;
     const amount = req.body.amount || "100000000000000000000";
-    const tx = await VolaryContract.connect(signers[index]).approve(StakingContractAddress,amount);
+    let tx
+    if(isLp) tx = await lpContract.connect(signers[index]).approve(StakingContractAddress,amount);
+    else tx = await VolaryContract.connect(signers[index]).approve(StakingContractAddress,amount);
+     
     res.send({ status : 200, message : "approval successful", hash : tx.hash})
   }
   catch(err){
@@ -94,10 +112,11 @@ app.get("/approve",async(req,res)=> {
 
 app.post("/CreateStake", async (req,res) =>{
     let stake_amount = req.body.amount  ;
+    const isLp = req.body.isLp  || false;
     const signers = await ethers.getSigners();
     const index = req.body.index || 1;
     const duration = req.body.duration;
-    const tx = await StakingContract.connect(signers[index]).createStake(stake_amount,duration);
+    const tx = await StakingContract.connect(signers[index]).createStake(stake_amount,duration,isLp);
     res.send({ status : 200 , message : `stake created successfully`, hash : tx.hash})
 });
 
