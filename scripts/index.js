@@ -1,6 +1,6 @@
 const  { ethers , config } = require("hardhat");
 const { providerJson, deployContracts }  = require('./staking')
-const { rewardPoolABI , stakingABI , volaryABI , lpABI} = require('./abi');
+const { rewardPoolABI , stakingABI , volaryABI , lpABI, oracleABI} = require('./abi');
 const { signMessage } = require('../scripts/sign');
 const express = require("express");
 const app = express();
@@ -16,11 +16,11 @@ app.get("/", (req, res) => {
 
 
 
-let VolaryContractAddress,StakingContractAddress,RewardPoolContractAddress,lpContractAddress;
+let VolaryContractAddress,StakingContractAddress,RewardPoolContractAddress,lpContractAddress,oracleContractAddress;
 
 
 const provider = providerJson.provider;
-let VolaryContract,StakingContract,RewardContract,lpContract 
+let VolaryContract,StakingContract,RewardContract,lpContract,oracleContract
 
 //console.log(VolaryContract);
 
@@ -36,10 +36,12 @@ app.get('/deploy',async(req,res)=>{
     StakingContractAddress = addresses.StakingContractAddress
     RewardPoolContractAddress = addresses.RewardPoolContractAddress
     lpContractAddress = addresses.lpContractAddress;
+    oracleContractAddress = addresses.oracleContractAddress;
     VolaryContract = new ethers.Contract(VolaryContractAddress, volaryABI, provider);
     StakingContract = new ethers.Contract(StakingContractAddress, stakingABI, provider);
     RewardContract = new ethers.Contract(RewardPoolContractAddress, rewardPoolABI, provider);
     lpContract = new ethers.Contract(lpContractAddress, lpABI, provider);
+    oracleContract = new ethers.Contract(oracleContractAddress, oracleABI, provider);
 
     res.send({ status : 200 , message : "contracts deployed"})
   }

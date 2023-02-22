@@ -5,7 +5,8 @@ const { signMessage } = require('../scripts/sign');
 const stackingContract = artifacts.require("contracts/stacking.sol:StakingToken");
 const rewardsContract = artifacts.require("contracts/rewards.sol:rewardPool");
 const tokenContract = artifacts.require("Volary");
-const lpContract = artifacts.require("lpToken")
+const lpContract = artifacts.require("contracts/lpContract.sol:lpToken");
+const oracleContract = artifacts.require("contracts/oracle.sol:priceFeed");
 const provider = new ethers.providers.JsonRpcProvider();
 
 const providerJson = { provider }
@@ -23,6 +24,13 @@ const deployContracts = async() => {
         "Token Address :", _token_contract.address
     );
      
+    //Token contract ----------------------------------------------------------------------------
+    const _oracle_contract = await oracleContract.new()
+
+
+    console.log(
+        "Oracle Address :", _oracle_contract.address
+    );
     //LP contract ----------------------------------------------------------------------------
     const _lp_contract = await lpContract.new()
 
@@ -36,7 +44,7 @@ const deployContracts = async() => {
     
     //Staking contract ----------------------------------------------------------------------------
     
-    const _staking_contract = await stackingContract.new(_token_contract.address,_lp_contract.address);
+    const _staking_contract = await stackingContract.new(_token_contract.address,_lp_contract.address,_oracle_contract.address);
 
     console.log(
         "Staking Contract Address: ", _staking_contract.address
@@ -53,7 +61,8 @@ const deployContracts = async() => {
         VolaryContractAddress : _token_contract.address,
         lpContractAddress : _lp_contract.address,
         StakingContractAddress : _staking_contract.address,
-        RewardPoolContractAddress : _reward_contract.address
+        RewardPoolContractAddress : _reward_contract.address,
+        oracleContractAddress : _oracle_contract.address
     }
 } catch (e) {
     console.error(e);

@@ -533,6 +533,11 @@ stakingABI = [
         "internalType": "address",
         "name": "_lpAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_oracleAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -683,9 +688,9 @@ stakingABI = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_stakeholder",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_stakeId",
+        "type": "uint256"
       }
     ],
     "name": "getStackerLevel",
@@ -752,6 +757,16 @@ stakingABI = [
         "internalType": "bool",
         "name": "isLp",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "usdPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "usdValue",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -798,6 +813,25 @@ stakingABI = [
   {
     "inputs": [],
     "name": "getTotalNumberOfStakes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_stakeId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUsdValue",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1824,9 +1858,102 @@ lpABI = [
     }
   ]
 
+oracleABI =  [
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "feedPrice",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
+
   module.exports = {
       rewardPoolABI,
       stakingABI,
       volaryABI,
-      lpABI
+      lpABI,
+      oracleABI
   }
